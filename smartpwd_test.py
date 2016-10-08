@@ -10,7 +10,7 @@ from smartpwd import smartpwd
 
 class SmartpwdTest(unittest.TestCase):
 
-  def testJustHomeAsCwd(self):
+  def testJustHome(self):
     cwd = "/usr/home"
     home = "/usr/home"
     maxlen = 16
@@ -32,7 +32,7 @@ class SmartpwdTest(unittest.TestCase):
 
   def testDirectoryThatFitsSnuggly(self):
     cwd = "/etc/shortdir1"
-    home = ""  # Not used.
+    home = "/usr/home"  # Not used.
     maxlen = 16
 
     actual = smartpwd(cwd, home, maxlen)
@@ -42,7 +42,7 @@ class SmartpwdTest(unittest.TestCase):
 
   def testReallyLongInitialDirectory(self):
     cwd = "/reallylikeuneccesarliylongdirectoryname/shortdir1/shortdir2"
-    home = ""  # Not used.
+    home = "/usr/home"  # Not used.
     maxlen = 16
 
     actual = smartpwd(cwd, home, maxlen)
@@ -52,7 +52,7 @@ class SmartpwdTest(unittest.TestCase):
 
   def testReallyLongFinalDirectory(self):
     cwd = "/shortdir1/shortdir2/reallylikeuneccesarliylongdirectoryname"
-    home = ""  # Not used.
+    home = "/usr/home"  # Not used.
     maxlen = 16
 
     actual = smartpwd(cwd, home, maxlen)
@@ -63,7 +63,7 @@ class SmartpwdTest(unittest.TestCase):
 
   def testReallyLongIntermediateDirectory(self):
     cwd = "/shortdir1/reallylikeuneccesarliylongdirectoryname/shortdir2"
-    home = ""  # Not used.
+    home = "/usr/home"  # Not used.
     maxlen = 16
 
     actual = smartpwd(cwd, home, maxlen)

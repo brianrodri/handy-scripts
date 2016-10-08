@@ -25,8 +25,8 @@ def main():
 
   try:
     maxlen = int(os.getenv("PROMPT_LENGTH"))
-  except TypeError:
-    maxlen = 40  # $PROMPT_LENGTH did not exist.
+  except TypeError:  # $PROMPT_LENGTH did not exist.
+    maxlen = 40
   except ValueError:
     maxlen = 40
     print("$PROMPT_LENGTH exists, but isn't an int.", file=sys.stderr)
