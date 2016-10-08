@@ -50,11 +50,11 @@ class SmartpwdTest(unittest.TestCase):
     cwd = "/shortdir1/shortdir2/reallylikeuneccesarliylongdirectoryname"
 
     actual = smartpwd(cwd, self.home, self.maxlen)
-    expected = ".../reallylikeuneccesarliylongdirectoryname"  # N.B. this is the
-                                                              # only case where
-    self.assertEqual(expected, actual)                        # we ignore
-                                                              # maxlen.
+    # N.B. this is the only case where we ignore maxlen.
+    expected = ".../reallylikeuneccesarliylongdirectoryname"
 
+    self.assertEqual(expected, actual)                        
+                                                              
   def testReallyLongIntermediateDirectory(self):
     cwd = "/shortdir1/reallylikeuneccesarliylongdirectoryname/shortdir2"
 
