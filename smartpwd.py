@@ -9,15 +9,15 @@ import sys
 
 def smartpwd(pwd, home, maxlen):
   """Modify pwd to show as much useful information as possible within maxlen."""
-  if home and pwd.startswith(home):
+  SEPERATOR = ".../"
+  
+  if pwd.startswith(home):
     pwd = "~" + pwd[len(home):]
   if len(pwd) > maxlen:
-    finalbslash = pwd.rfind("/")
-    if finalbslash != -1:
-      finaldir = pwd[finalbslash+1:]
-      pwd = pwd[:max(0, maxlen-len(finaldir)-4)] + ".../" + finaldir
+    head, tail = os.path.split(pwd)  # /dir/eir/fir -> ("/dir/eir", "fir")
+    available_space = max(0, maxlen - len(tail) - len(SEPERATOR))
+    pwd = SEPERATOR.join([head[:available_space], tail])
   return pwd
-
 
 def main():
   cwd = os.getcwd()
