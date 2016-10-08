@@ -10,52 +10,46 @@ from smartpwd import smartpwd
 
 class SmartpwdTest(unittest.TestCase):
 
+  def setUp(self):
+    self.home = "/usr/home"
+    self.maxlen = 16
+
   def testJustHome(self):
     cwd = "/usr/home"
-    home = "/usr/home"
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = "~"
 
     self.assertEqual(expected, actual)
 
   def testJustHomeAsCwdButWithLongIntermediateDirectoryName(self):
     cwd = "/usr/home/reallylikeuneccesarilylongdirectoryname/shortdir1"
-    home = "/usr/home"
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = "~/r.../shortdir1"
 
     self.assertEqual(expected, actual)
 
   def testDirectoryThatFitsSnuggly(self):
     cwd = "/etc/shortdir1"
-    home = "/usr/home"  # Not used.
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = cwd
 
     self.assertEqual(expected, actual)
 
   def testReallyLongInitialDirectory(self):
     cwd = "/reallylikeuneccesarliylongdirectoryname/shortdir1/shortdir2"
-    home = "/usr/home"  # Not used.
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = "/re.../shortdir2"
 
     self.assertEqual(expected, actual)
 
   def testReallyLongFinalDirectory(self):
     cwd = "/shortdir1/shortdir2/reallylikeuneccesarliylongdirectoryname"
-    home = "/usr/home"  # Not used.
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = ".../reallylikeuneccesarliylongdirectoryname"  # N.B. this is the
                                                               # only case where
     self.assertEqual(expected, actual)                        # we ignore
@@ -63,10 +57,8 @@ class SmartpwdTest(unittest.TestCase):
 
   def testReallyLongIntermediateDirectory(self):
     cwd = "/shortdir1/reallylikeuneccesarliylongdirectoryname/shortdir2"
-    home = "/usr/home"  # Not used.
-    maxlen = 16
 
-    actual = smartpwd(cwd, home, maxlen)
+    actual = smartpwd(cwd, self.home, self.maxlen)
     expected = "/sh.../shortdir2"
 
     self.assertEqual(expected, actual)
