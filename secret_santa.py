@@ -10,7 +10,7 @@ from itertools import combinations, groupby, product
 
 
 def BijectionsOf(domain, codomain, relations):
-  """Return the subsets of relations which create 1-to-1 mappings."""
+  """Return all subsets of relations which create 1-to-1 mappings."""
   mapping = defaultdict(set)
   for x, y in relations:
     mapping[x].add(y)
