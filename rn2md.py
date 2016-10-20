@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 """Translates text in RedNotebook syntax to Markdown syntax.
 
 Given a sequence of lines from stdin, this script will print out the same
@@ -15,11 +15,16 @@ Here is a list of the currently supported transformations:
   =Text=                  # Text
   [""url""]               ![...](url)
 """
+import argparse
+import codecs
+import datetime
 import functools
 import itertools
 import iterutils
+import os
 import re
 import sys
+import yaml
 
 
 URL_PATTERN = re.compile(r"^(?:http|file|ftp)s?://"
@@ -133,7 +138,7 @@ class TranslateItalics(Morpher):
     matches = (m for m in re.finditer(r"//", string) if
                not OccursInUrl(m) and not OccursInBacktick(m))
     return [(lo.start(), hi.end())
-            for lo, hi in iterutils.grouper(2, matches) if all(lo, hi)]
+            for lo, hi in iterutils.grouper(2, matches) if all((lo, hi))]
 
   def Transform(self, old):
     return "_{}_".format(old[2:-2])
@@ -174,7 +179,7 @@ class TranslateStrikethroughs(Morpher):
     matches = (m for m in re.finditer(r"--", string) if
                not OccursInUrl(m) and not OccursInBacktick(m))
     return [(lo.start(), hi.end())
-            for lo, hi in iterutils.grouper(2, matches) if all(lo, hi)]
+            for lo, hi in iterutils.grouper(2, matches) if all((lo, hi))]
 
 
 class TranslateHeaders(Morpher):
@@ -251,12 +256,97 @@ class EscapeInnerUnderscores(Morpher):
     return "\_"
 
 
+def ValidDate(s, fmt="%Y-%m-%d"):
+  try:
+    return datetime.datetime.strptime(s, fmt).date()
+  except ValueError:
+    raise argparse.ArgumentTypeError("Not a valid date: '{0}'.".format(s))
+
+
+def BuildMonthPaths():
+  DATA_DIR = os.path.expanduser("~/.rednotebook/data")
+  for basename in sorted(os.listdir(DATA_DIR)):
+    root, ext = os.path.splitext(basename)
+    try:
+      yield (os.path.join(DATA_DIR, basename), ValidDate(root, fmt="%Y-%m"))
+    except argparse.ArgumentTypeError:
+      pass
+
+
+def LoadDaysFromPath(path, month_date):
+  with codecs.open(path, "rb", encoding="utf-8") as month_file:
+    contents = yaml.load(month_file, Loader=yaml.CLoader)
+    return {month_date.replace(day=d): contents[d]["text"] for d in contents}
+
+
+def BuildDailyLogDict():
+  collection = dict()
+  for month in (LoadDaysFromPath(*p) for p in BuildMonthPaths()):
+    collection.update(month)
+  return collection
+
+
+def ExpandDateRange(beg, end):
+  span = end - beg
+  for n in range(int(span.days) + 1):
+    yield beg + datetime.timedelta(n)
+
+
+def DatesFromArgv():
+  parser = argparse.ArgumentParser()
+  subparsers = parser.add_subparsers(dest="command")
+  parser_today = subparsers.add_parser("today",
+                                       help="Print today's entry")
+  parser_week = subparsers.add_parser("week",
+                                      help="Print this week's entries")
+  parser_yesterday = subparsers.add_parser("yesterday",
+                                           help="Print yesterday's entry")
+  parser_range = subparsers.add_parser("range",
+                                       help=("Print entries within given date "
+                                             "range w/ YYYY-MM-DD format."))
+  parser_range.add_argument("-f", "--start", type=ValidDate, required=True)
+  parser_range.add_argument("-t", "--end", type=ValidDate, required=True)
+  parser.set_defaults(command="today")
+  args = parser.parse_args()
+
+  if args.command == "today":
+    return [datetime.date.today()]
+  elif args.command == "week":
+    today = datetime.date.today()
+    start = today - datetime.timedelta(days=today.weekday())
+    end = start + datetime.timedelta(6)
+    return list(ExpandDateRange(start, end))
+  elif args.command == "yesterday":
+    today = datetime.date.today()
+    if today.weekday() in range(1, 6):
+      yesterday = today - datetime.timedelta(1)
+    elif today.weekday() == 6:
+      yesterday = today - datetime.timedelta(2)
+    else:  # today is monday
+      yesterday = today - datetime.timedelta(3)
+    return [yesterday]
+  else:
+    return list(ExpandDateRange(args.start, args.end))
+
+
+def FormatDay(day, database):
+  rn2md = ComposeLeft(TranslateHeaders(padding=1), TranslateImages(),
+                      TranslateLinks(), TranslateItalics(), TranslateLists(),
+                      TranslateStrikethroughs(), EscapeInnerUnderscores())
+  head = day.strftime("%b %d, %Y")
+  body = map(lambda line: line.rstrip(), database[day].split("\n"))
+  formatted_head = "# " + head
+  formatted_body = "\n".join(map(rn2md, body))
+  if formatted_body:
+    return formatted_head + "\n" + formatted_body
+  else:
+    return formatted_head
+
+
 def main():
-  rn2md = ComposeLeft(FirstLineToHeader(), TranslateHeaders(padding=1),
-                      TranslateImages(), TranslateLinks(), TranslateItalics(),
-                      TranslateLists(), TranslateStrikethroughs(),
-                      EscapeInnerUnderscores())
-  print("\n".join(rn2md(line.rstrip()) for line in sys.stdin))
+  database = BuildDailyLogDict()
+  Format = lambda day: FormatDay(day, database)
+  print("\n\n\n".join(Format(d) for d in DatesFromArgv() if d in database))
 
 
 if __name__ == "__main__":
