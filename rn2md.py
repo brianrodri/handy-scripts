@@ -286,15 +286,16 @@ def BuildMonthPaths():
       pass
 
 
-def LoadDaysFromPath(path, month_date):
+def LoadDaysFromPath(path_details):
+  path, path_month = path_details
   with codecs.open(path, "rb", encoding="utf-8") as month_file:
     contents = yaml.load(month_file, Loader=yaml.CLoader)
-    return {month_date.replace(day=d): contents[d]["text"] for d in contents}
+    return {path_month.replace(day=d): contents[d]["text"] for d in contents}
 
 
 def BuildDailyLogDict():
   collection = dict()
-  for month in (LoadDaysFromPath(*p) for p in BuildMonthPaths()):
+  for month in (LoadDaysFromPath(p) for p in BuildMonthPaths()):
     collection.update(month)
   return collection
 
