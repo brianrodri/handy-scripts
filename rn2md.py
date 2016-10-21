@@ -20,13 +20,14 @@ import codecs
 import datetime
 import functools
 import itertools
-import iterutils
 import os
 import re
-import sys
+
+import iterutils
 import yaml
 
 
+DATA_DIR = os.path.expanduser("~/.rednotebook/data")
 URL_PATTERN = re.compile(r"^(?:http|file|ftp)s?://"
                          r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+"
                          r"(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"
@@ -110,7 +111,7 @@ class Morpher(object):
       output += string[currhi:nextlo]
     return output or string
 
-  def FindRanges(self, string):
+  def FindRanges(self, string):  # pylint: disable=unused-argument
     """Get indicies of substrings that should have Transform applied to them.
 
     Args:
@@ -253,7 +254,20 @@ class EscapeInnerUnderscores(Morpher):
             if not OccursInUrl(m) and not OccursInBacktick(m)]
 
   def Transform(self, old):
-    return "\_"
+    return "\\_"
+
+
+class TranslateBackticks(Morpher):
+
+  def __init__(self):
+    self.line_num = 0
+
+  def FindRanges(self, string):
+    return [m.span() for m in re.finditer("``.*?``", string)
+            if not OccursInUrl(m)]
+
+  def Transform(self, old):
+    return old[1:-1]  # Trim off the outermost ticks.
 
 
 def ValidDate(s, fmt="%Y-%m-%d"):
@@ -264,9 +278,8 @@ def ValidDate(s, fmt="%Y-%m-%d"):
 
 
 def BuildMonthPaths():
-  DATA_DIR = os.path.expanduser("~/.rednotebook/data")
   for basename in sorted(os.listdir(DATA_DIR)):
-    root, ext = os.path.splitext(basename)
+    root, _ = os.path.splitext(basename)
     try:
       yield (os.path.join(DATA_DIR, basename), ValidDate(root, fmt="%Y-%m"))
     except argparse.ArgumentTypeError:
@@ -293,29 +306,32 @@ def ExpandDateRange(beg, end):
 
 
 def DatesFromArgv():
+  """Parses command-line input to deterimine the date range to be printed."""
   parser = argparse.ArgumentParser()
+  parser.add_argument("-d", "--debug", dest='debug', action='store_true')
   subparsers = parser.add_subparsers(dest="command")
-  parser_today = subparsers.add_parser("today",
-                                       help="Print today's entry")
-  parser_week = subparsers.add_parser("week",
-                                      help="Print this week's entries")
-  parser_yesterday = subparsers.add_parser("yesterday",
-                                           help="Print yesterday's entry")
-  parser_range = subparsers.add_parser("range",
-                                       help=("Print entries within given date "
-                                             "range w/ YYYY-MM-DD format."))
-  parser_range.add_argument("-f", "--start", type=ValidDate, required=True)
-  parser_range.add_argument("-t", "--end", type=ValidDate, required=True)
-  parser.set_defaults(command="today")
+  subparsers.add_parser("today", help="Print today's entry")
+  week_parser = subparsers.add_parser("week", help="Print this week's entries")
+  week_parser.add_argument("week_number", nargs="?",
+                           default=datetime.date.today().isocalendar()[1])
+  week_parser.add_argument("-y", "--year", type=int,
+                           default=datetime.date.today().year)
+  subparsers.add_parser("yesterday", help="Print yesterday's entry")
+  range_parser = subparsers.add_parser(
+      "range", help="Print entries within specified YYYY-MM-DD date range.")
+  range_parser.add_argument("-f", "--start", type=ValidDate, required=True)
+  range_parser.add_argument("-t", "--end", type=ValidDate, required=True)
+  parser.set_defaults(command="today", debug=False)
   args = parser.parse_args()
+  dates = []
 
   if args.command == "today":
-    return [datetime.date.today()]
+    dates = [datetime.date.today()]
   elif args.command == "week":
-    today = datetime.date.today()
-    start = today - datetime.timedelta(days=today.weekday())
+    d = "{}-W{}".format(args.year, args.week_number)
+    start = datetime.datetime.strptime(d + "-1", "%Y-W%W-%w").date()
     end = start + datetime.timedelta(6)
-    return list(ExpandDateRange(start, end))
+    dates = list(ExpandDateRange(start, end))
   elif args.command == "yesterday":
     today = datetime.date.today()
     if today.weekday() in range(1, 6):
@@ -324,29 +340,36 @@ def DatesFromArgv():
       yesterday = today - datetime.timedelta(2)
     else:  # today is monday
       yesterday = today - datetime.timedelta(3)
-    return [yesterday]
+    dates = [yesterday]
   else:
-    return list(ExpandDateRange(args.start, args.end))
+    dates = list(ExpandDateRange(args.start, args.end))
+
+  if args.debug:
+    print("\n".join(map(str, dates)))
+    return []
+  else:
+    return dates
 
 
 def FormatDay(day, database):
-  rn2md = ComposeLeft(TranslateHeaders(padding=1), TranslateImages(),
-                      TranslateLinks(), TranslateItalics(), TranslateLists(),
-                      TranslateStrikethroughs(), EscapeInnerUnderscores())
+  rn2md = ComposeLeft(TranslateHeaders(padding=1), TranslateBackticks(),
+                      TranslateImages(), TranslateLinks(), TranslateItalics(),
+                      TranslateLists(), TranslateStrikethroughs(),
+                      EscapeInnerUnderscores())
   head = day.strftime("%b %d, %Y")
-  body = map(lambda line: line.rstrip(), database[day].split("\n"))
+  body = (line.rstrip() for line in database[day].split("\n"))
   formatted_head = "# " + head
   formatted_body = "\n".join(map(rn2md, body))
   if formatted_body:
-    return formatted_head + "\n" + formatted_body
+    return formatted_head + "\n" + formatted_body.rstrip()
   else:
-    return formatted_head
+    return formatted_head.rstrip()
 
 
 def main():
   database = BuildDailyLogDict()
-  Format = lambda day: FormatDay(day, database)
-  print("\n\n\n".join(Format(d) for d in DatesFromArgv() if d in database))
+  prettify = lambda day: FormatDay(day, database)
+  print("\n\n\n".join(prettify(d) for d in DatesFromArgv() if d in database))
 
 
 if __name__ == "__main__":
