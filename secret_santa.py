@@ -1,66 +1,60 @@
 #!/usr/bin/env python3
+"""Provides a "truly random" set of pairings for secret santa players.
+
+Run with '--send' or '-s' to send emails about designations to each player.
+"""
+import collections
+import email.mime.text
+import getpass
+import itertools
 import random
 import smtplib
 import sys
 
-from collections import defaultdict, namedtuple
-from email.mime.text import MIMEText
-from getpass import getpass
-from itertools import combinations, groupby, product
+
+def MakeRandomPairings(items):
+    """Return random list of pairs such that items appear once on each side.
+
+    Items are never paired with themselves, unless only one item is present.
+
+    Example:
+        >>> MakeRandomPairings([1, 2, 3])
+        ... [(2, 1), (1, 3), (3, 2)]  # Possible outcome
+        >>> [(3, 1), (1, 3), (2, 2)]  # Impossible outcome
+    Args:
+        items: iterable of anything.
+    Returns:
+        list of pairs such that each item appears once on both sides.
+    """
+    items = [i for i in items]  # Always create a new list of items.
+    random.shuffle(items)
+    items_iter = iter(items)
+    offset_items_iter = itertools.cycle(items)
+    _ = next(offset_items_iter)  # Drop first item to offset it from items_iter.
+    return list(zip(items_iter, offset_items_iter))
 
 
-def BijectionsOf(domain, codomain=None, relations=None):
-  """Return all subsets of relations which create 1-to-1 mappings."""
-  if codomain is None:
-    codomain = domain
-  if relations is None:
-    relations = set(product(domain, codomain))
-    if codomain is domain:
-      relations -= set(zip(domain, domain))
-  elif not all(x in domain and y in codomain for x, y in relations):
-    raise ValueError("relations contains an undefined pair.")
+EMAIL_SUBJECT = 'Secret Santa 2018!'
+EMAIL_BODY = 'yo %s, you got %s. spending limit this year is: $40'
 
-  mapping = defaultdict(set)
-  for x, y in relations:
-    mapping[x].add(y)
-  for ys in product(*mapping.values()):
-    if len(set(ys)) == len(domain):
-      yield tuple(zip(mapping.keys()))
+Player = collections.namedtuple('Player', 'name, email')
+PLAYERS = [
+    # REDACTED ;)
+]
 
-
-def main():
-  # Fetch input.
-  Participant = namedtuple("Participant", "name, email")
-  members = set()
-  print("Enter one participant per line w/ the format: \"name, e-mail\"")
-  for line in sys.stdin.readlines():
-    data = line.split(",", 1)
-    name, email = data[0].strip(), data[1].strip()
-    members.add(Participant(name, email))
-
-  # Choose a random group of members.
-  try:
-    group = random.choice(BijectionsOf(members))
-  except ValueError:
-    print("No matches.", file=sys.stderr)
-    sys.exit()
-
-  # Send out the e-mails.
-  subject = "Secret Santa 2016!"
-  body = "Hey {} you got {}, and the spending limit this year is $40!"
-  messenger, password = input("E-Mail: "), getpass()
-  with smtplib.SMTP("smtp.gmail.com:587") as server:
-    server.ehlo()
-    server.starttls()
-    server.login(messenger, password)
-    for santa, santee in group:
-      msg = MIMEText(body.format(santa.name, santee.name))
-      msg["Subject"] = subject
-      msg["From"] = messenger
-      msg["To"] = santa.email
-      server.send_message(msg)
-  print("Done.")
-
-
-if __name__ == "__main__":
-  main()
+if __name__ == '__main__':
+    if {'--send', '-s'} & set(sys.argv[1:]):
+        with smtplib.SMTP('smtp.gmail.com:587') as server:
+            server.ehlo(), server.starttls()  # Low-level connection stuff.
+            email_sender = input('Gmail address: ')
+            server.login(email_sender, getpass.getpass())
+            for santa, santee in MakeRandomPairings(PLAYERS):
+                email = text.MIMEText(EMAIL_BODY % (santa.name, santee.name))
+                email['Subject'] = EMAIL_SUBJECT
+                email['From'] = email_sender
+                email['To'] = santa.email
+                server.send_message(email)
+            print('Sent')
+    else:
+        for santa, santee in MakeRandomPairings(PLAYERS):
+            print(f'{santa.name} -> {santee.name}')
