@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Provides a "truly random" set of pairings for secret santa players.
 
-Run with '--send' or '-s' to send emails about designations to each player.
+Run with '--send' to send emails about designations to each player.
 """
-import collections
-import email.mime.text
-import getpass
+from collections import namedtuple
+from email.mime.text import MIMEText
+from getpass import getpass
+
 import itertools
 import random
 import smtplib
@@ -35,21 +36,26 @@ def MakeRandomPairings(items):
 
 
 EMAIL_SUBJECT = 'Secret Santa 2018!'
-EMAIL_BODY = 'yo %s, you got %s'
+EMAIL_BODY = 'yo %s, you got %s. spending limit this year is: $40'
 
-Player = collections.namedtuple('Player', 'name, email')
+Player = namedtuple('Player', 'name, email')
 PLAYERS = [
-    # REDACTED ;)
+    Player(name='Alan', email='alanchiu93@gmail.com'),
+    Player(name='Antonette', email='hikkixlovesyou@gmail.com'),
+    Player(name='Brian', email='thatbrod@gmail.com'),
+    Player(name='Dan', email='Boogydaniel@aol.com'),
+    Player(name='Mike', email='Mikechangg@yahoo.com'),
+    Player(name='Sean', email='sean.han@brooklaw.edu'),
 ]
 
 if __name__ == '__main__':
-    if {'--send', '-s'} & set(sys.argv[1:]):
+    if '--send' in sys.argv[1:]:
         with smtplib.SMTP('smtp.gmail.com:587') as server:
             server.ehlo(), server.starttls()  # Low-level connection stuff.
             email_sender = input('Gmail address: ')
-            server.login(email_sender, getpass.getpass())
+            server.login(email_sender, getpass())
             for santa, santee in MakeRandomPairings(PLAYERS):
-                email = text.MIMEText(EMAIL_BODY % (santa.name, santee.name))
+                email = MIMEText(EMAIL_BODY.format(santa.name, santee.name))
                 email['Subject'] = EMAIL_SUBJECT
                 email['From'] = email_sender
                 email['To'] = santa.email
