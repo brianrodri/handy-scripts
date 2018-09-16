@@ -35,32 +35,24 @@ def MakeRandomPairings(items):
     return list(zip(items_iter, offset_items_iter))
 
 
-EMAIL_SUBJECT = 'Secret Santa 2018!'
-EMAIL_BODY = 'yo %s, you got %s. spending limit this year is: $40'
-
 Player = namedtuple('Player', 'name, email')
-PLAYERS = [
-    Player(name='Alan', email='alanchiu93@gmail.com'),
-    Player(name='Antonette', email='hikkixlovesyou@gmail.com'),
+players = [
     Player(name='Brian', email='thatbrod@gmail.com'),
-    Player(name='Dan', email='Boogydaniel@aol.com'),
-    Player(name='Mike', email='Mikechangg@yahoo.com'),
-    Player(name='Sean', email='sean.han@brooklaw.edu'),
+    Player(name='Rianb', email='dthatbro@gmail.com'),
+    Player(name='Ianbr', email='odthatbr@gmail.com'),
 ]
-
-if __name__ == '__main__':
-    if '--send' in sys.argv[1:]:
-        with smtplib.SMTP('smtp.gmail.com:587') as server:
-            server.ehlo(), server.starttls()  # Low-level connection stuff.
-            email_sender = input('Gmail address: ')
-            server.login(email_sender, getpass())
-            for santa, santee in MakeRandomPairings(PLAYERS):
-                email = MIMEText(EMAIL_BODY.format(santa.name, santee.name))
-                email['Subject'] = EMAIL_SUBJECT
-                email['From'] = email_sender
-                email['To'] = santa.email
-                server.send_message(email)
-            print('Sent')
-    else:
-        for santa, santee in MakeRandomPairings(PLAYERS):
-            print(f'{santa.name} -> {santee.name}')
+if '--send' in sys.argv[1:]:
+    with smtplib.SMTP('smtp.gmail.com:587') as server:
+        server.ehlo(), server.starttls()  # Low-level connection stuff.
+        email_sender = input('Gmail address: ')
+        server.login(email_sender, getpass())
+        for santa, santee in MakeRandomPairings(players):
+            email = MIMEText(f'yo {santa.name}, you got {santee.name}.')
+            email['Subject'] = 'Secret Santa 2018!'
+            email['From'] = email_sender
+            email['To'] = santa.email
+            server.send_message(email)
+        print('Sent')
+else:
+    for santa, santee in MakeRandomPairings(players):
+        print(f'{santa.name} -> {santee.name}')
