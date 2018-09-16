@@ -35,7 +35,7 @@ def MakeRandomPairings(items):
 
 
 EMAIL_SUBJECT = 'Secret Santa 2018!'
-EMAIL_BODY = 'yo %s, you got %s. spending limit this year is: ??$'
+EMAIL_BODY = 'yo %s, you got %s'
 
 Player = collections.namedtuple('Player', 'name, email')
 PLAYERS = [
