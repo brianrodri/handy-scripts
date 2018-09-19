@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Provides a "truly random" set of pairings for secret santa players.
 
-Run with '--send' to send emails about designations to each player.
+Run this script with `--send` to send emails about designations to each player.
 """
-from collections import namedtuple
 from email.mime.text import MIMEText
 from getpass import getpass
 from typing import Any, Iterable, List, Tuple
 
+import collections
 import itertools
 import random
 import smtplib
@@ -32,7 +32,7 @@ def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
     return list(zip(items_iter, offset_items_iter))
 
 
-Player = namedtuple('Player', 'name, email')
+Player = collections.namedtuple('Player', 'name, email')
 players = [
     # REDACTED ;)
 ]
