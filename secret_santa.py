@@ -17,14 +17,18 @@ import sys
 def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
     """Returns a list of random pairs which form a bijection on items to itself.
 
-    The bijection is guaranteed to contain exactly one cycle.
+    The bijection is guaranteed to contain *at most* 1 cycle.
 
     Example:
         >>> MakeRandomPairings([1, 2, 3, 4])
         ... [(2, 1), (1, 3), (3, 4), (4, 2)]  # Possible outcome
         >>> [(3, 2), (2, 3), (1, 4), (4, 1)]  # Impossible outcome
+    Args:
+        items: must be finite.
     """
-    items = [i for i in items]  # Create an independent list of items.
+    items = [i for i in items]  # Use an independent list of items.
+    if not items:
+        return []
     random.shuffle(items)
     items_iter = iter(items)
     offset_items_iter = itertools.cycle(items)
