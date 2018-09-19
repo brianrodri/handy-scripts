@@ -34,7 +34,7 @@ def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
 
 Player = collections.namedtuple('Player', 'name, email')
 players = [
-    # REDACTED ;)
+    Player(name="Brian", email="thatbrod@gmail.com"),  # Change this (please) :)
 ]
 if '--send' in sys.argv[1:]:
     with smtplib.SMTP('smtp.gmail.com:587') as server:
