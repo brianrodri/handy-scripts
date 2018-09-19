@@ -24,7 +24,7 @@ def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
         ... [(2, 1), (1, 3), (3, 4), (4, 2)]  # Possible outcome
         >>> [(3, 2), (2, 3), (1, 4), (4, 1)]  # Impossible outcome
     """
-    items = [i for i in items]  # Always create a new list of items.
+    items = [i for i in items]  # Always create a new independent list of items.
     random.shuffle(items)
     items_iter = iter(items)
     offset_items_iter = itertools.cycle(items)
@@ -34,7 +34,12 @@ def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
 
 Player = collections.namedtuple('Player', 'name, email')
 players = [
-    # REDACTED ;)
+    Player(name='Alan', email='alanchiu93@gmail.com'),
+    Player(name='Antonette', email='hikkixlovesyou@gmail.com'),
+    Player(name='Brian', email='thatbrod@gmail.com'),
+    Player(name='Dan', email='Boogydaniel@aol.com'),
+    Player(name='Mike', email='Mikechangg@yahoo.com'),
+    Player(name='Sean', email='sean.han@brooklaw.edu'),
 ]
 if '--send' in sys.argv[1:]:
     with smtplib.SMTP('smtp.gmail.com:587') as server:
