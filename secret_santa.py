@@ -41,8 +41,8 @@ def MakeRandomPairings(items):
 
 Player = namedtuple('Player', 'name, email')
 players = [
-    Player(name='test', 'anon@anon.com'),
-    Player(name='me', 'thatbrod@gmail.com'),
+    Player(name='test', email='anon@anon.com'),
+    Player(name='me', email='thatbrod@gmail.com'),
 ]
 if '--send' in sys.argv[1:]:
     with smtplib.SMTP('smtp.gmail.com:587') as server:
