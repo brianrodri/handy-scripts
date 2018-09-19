@@ -6,6 +6,7 @@ Run with '--send' to send emails about designations to each player.
 from collections import namedtuple
 from email.mime.text import MIMEText
 from getpass import getpass
+from typing import Any, Iterable, List, Tuple
 
 import itertools
 import random
@@ -13,23 +14,15 @@ import smtplib
 import sys
 
 
-def MakeRandomPairings(items):
-    """Return random list of pairs such that items appear once on each side.
+def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
+    """Returns a list of random pairs which form a bijection on items to itself.
 
-    This function returns a bijection on items to itself. Additionally, the
-    bijection is guaranteed to never pair an item to itself (unless just one
-    item is present).
+    The bijection is guaranteed to contain exactly one cycle.
 
     Example:
-        >>> MakeRandomPairings([1, 2, 3])
-        ... [(2, 1), (1, 3), (3, 2)]  # Possible outcome
-        >>> [(3, 1), (1, 3), (2, 2)]  # Impossible outcome
-        >>> MakeRandomPairings([1])
-        ... [(1, 1)]  # Only outcome
-    Args:
-        items: iterable of anything.
-    Returns:
-        list of pairs such that each item appears once on both sides.
+        >>> MakeRandomPairings([1, 2, 3, 4])
+        ... [(2, 1), (1, 3), (3, 4), (4, 2)]  # Possible outcome
+        >>> [(3, 2), (2, 3), (1, 4), (4, 1)]  # Impossible outcome
     """
     items = [i for i in items]  # Always create a new list of items.
     random.shuffle(items)
@@ -41,8 +34,7 @@ def MakeRandomPairings(items):
 
 Player = namedtuple('Player', 'name, email')
 players = [
-    Player(name='test', email='anon@anon.com'),
-    Player(name='me', email='thatbrod@gmail.com'),
+    # REDACTED ;)
 ]
 if '--send' in sys.argv[1:]:
     with smtplib.SMTP('smtp.gmail.com:587') as server:
