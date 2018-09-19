@@ -27,13 +27,14 @@ def MakeRandomPairings(items: Iterable[Any]) -> List[Tuple[Any, Any]]:
         items: must be finite.
     """
     items = [i for i in items]  # Use an independent list of items.
-    if not items:
+    if items:
+        random.shuffle(items)
+        items_iter = iter(items)
+        offset_items_iter = itertools.cycle(items)
+        _ = next(offset_items_iter)  # Drop first item to offset it from items_iter.
+        return list(zip(items_iter, offset_items_iter))
+    else:
         return []
-    random.shuffle(items)
-    items_iter = iter(items)
-    offset_items_iter = itertools.cycle(items)
-    _ = next(offset_items_iter)  # Drop first item to offset it from items_iter.
-    return list(zip(items_iter, offset_items_iter))
 
 
 Player = collections.namedtuple('Player', 'name, email')
