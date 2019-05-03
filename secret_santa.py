@@ -5,7 +5,6 @@ from getpass import getpass
 from itertools import cycle
 from random import shuffle
 from smtplib import SMTP
-from typing import Any, Iterable, List, Tuple
 import sys
 
 
