@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
-from dataclasses import dataclass
-from email.mime.text import MIMEText
-from getpass import getpass
-from itertools import cycle
-from random import shuffle
-from smtplib import SMTP
+import collections
+import dataclasses
+import email.message
+import getpass
+import random
+import smtplib
 import sys
 
 
-@dataclass
+@dataclasses.dataclass
 class Player():
     name: str
     email: str
 
 
 def MakeRandomPairs(players):
-    """Returns list of random pairs with exactly one cycle."""
+    """Returns list of random player-pairs with exactly one cycle."""
     players = list(players)
     if not players:
         return []
-    shuffle(players)
-    rotated_players = cycle(players)
-    next(rotated_players)  # Rotate by 1.
+    random.shuffle(players)
+    rotated_players = collections.deque(players)
+    rotated_players.rotate(1)
     return list(zip(players, rotated_players))
 
 
-pairs = MakeRandomPairs([
+player_pairs = MakeRandomPairs([
     Player(name="Me", email="me@gmail.com"),
     Player(name="Her", email="her@gmail.com"),
     Player(name="Him", email="him@gmail.com"),
@@ -34,18 +34,18 @@ pairs = MakeRandomPairs([
 ])
 
 if '--send' in sys.argv[1:]:
-    with SMTP('http://smtp.gmail.com:587') as server:
-        server.ehlo(), server.starttls()
-        mock_sender = input('Gmail address: ')
-        server.login(mock_sender, getpass())
-        for santa, santee in pairs:
-            email = MIMEText(
-                f'Yo {santa.name}, you got {santee.name}!')
-            email['Subject'] = 'Secret Santa!'
-            email['From'] = mock_sender
-            email['To'] = santa.email
-            server.send_message(email)
-        print('Sent!')
+    with smtplib.SMTP('smtp.gmail.com:587') as server:
+        server.starttls()  # GMail requires TLS encryption.
+        sender_gmail = input('GMail address: ')
+        server.login(sender_gmail, getpass.getpass())
+        for santa, santee in player_pairs:
+            msg = message.EmailMessage()
+            msg.set_content(f'Yo {santa.name}, you got {santee.name}!')
+            msg['Subject'] = 'Secret Santa!'
+            msg['From'] = sender_gmail
+            msg['To'] = santa.email
+            server.send_message(msg)
+    print('Sent!')
 else:
-    for santa, santee in pairs:
+    for santa, santee in player_pairs:
         print(f'{santa.name} -> {santee.name}')
