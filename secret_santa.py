@@ -14,15 +14,14 @@ class Player():
     email: str
 
 
-def MakeRandomPairs(players):
-    """Returns list of random player-pairs with exactly one cycle."""
-    players = list(players)
-    if not players:
+def MakeRandomPairs(items):
+    """Returns list of random item-pairs with exactly one cycle."""
+    if not (items := list(items)):
         return []
-    random.shuffle(players)
-    rotated_players = collections.deque(players)
-    rotated_players.rotate(1)
-    return list(zip(players, rotated_players))
+    random.shuffle(items)
+    rotated_items = collections.deque(items)
+    rotated_items.rotate(1)
+    return list(zip(items, rotated_items))
 
 
 player_pairs = MakeRandomPairs([
