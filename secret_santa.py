@@ -23,10 +23,10 @@ def MakeRandomPairs(items):
     Returns:
         list.
     """
-    if not (items := list(items)):
-        return []
+    items = list(items)
     random.shuffle(items)
-    next(rotated_items := itertools.cycle(items))
+    rotated_items = itertools.cycle(items)
+    _ = next(rotated_items, None)
     return list(zip(items, rotated_items))
 
 
@@ -36,27 +36,32 @@ class Player():
     email: str
 
 
-player_pairs = MakeRandomPairs([
-    Player(name="Me", email="me@gmail.com"),
-    Player(name="Her", email="her@gmail.com"),
-    Player(name="Him", email="him@gmail.com"),
-    Player(name="Them", email="them@gmail.com"),
-    Player(name="Us", email="us@gmail.com"),
-])
+def main():
+    player_pairs = MakeRandomPairs([
+        Player(name="Me", email="me@gmail.com"),
+        Player(name="Her", email="her@gmail.com"),
+        Player(name="Him", email="him@gmail.com"),
+        Player(name="Them", email="them@gmail.com"),
+        Player(name="Us", email="us@gmail.com"),
+    ])
 
-if '--send' in sys.argv[1:]:
-    with smtplib.SMTP('smtp.gmail.com:587') as server:
-        server.starttls()  # GMail requires TLS encryption.
-        sender_gmail = input('GMail address: ')
-        server.login(sender_gmail, getpass.getpass())
+    if '--send' in sys.argv[1:]:
+        with smtplib.SMTP('smtp.gmail.com:587') as server:
+            server.starttls()  # GMail requires TLS encryption.
+            sender_gmail = input('GMail address: ')
+            server.login(sender_gmail, getpass.getpass())
+            for santa, santee in player_pairs:
+                msg = message.EmailMessage()
+                msg.set_content(f'Yo {santa.name}, you got {santee.name}!')
+                msg['Subject'] = 'Secret Santa!'
+                msg['From'] = sender_gmail
+                msg['To'] = santa.email
+                server.send_message(msg)
+        print('Sent!')
+    else:
         for santa, santee in player_pairs:
-            msg = message.EmailMessage()
-            msg.set_content(f'Yo {santa.name}, you got {santee.name}!')
-            msg['Subject'] = 'Secret Santa!'
-            msg['From'] = sender_gmail
-            msg['To'] = santa.email
-            server.send_message(msg)
-    print('Sent!')
-else:
-    for santa, santee in player_pairs:
-        print(f'{santa!r} -> {santee!r}')
+            print(f'{santa!r} -> {santee!r}')
+
+
+if __name__ == '__main__':
+    main()
