@@ -9,12 +9,24 @@ import sys
 
 
 def MakeRandomPairs(items):
-    """Returns list of random item-pairs with exactly one cycle."""
+    """Returns a list of random pairs making exactly one cycle through items.
+
+    Specifically, the returned list has the form:
+
+        (s[0], s[1]), (s[1], s[2]), (s[2], s[3]), ..., (s[N - 1], s[N])
+
+    Where s is a shuffled copy of the input items.
+
+    Args:
+        items: Iterable.
+
+    Returns:
+        list.
+    """
     if not (items := list(items)):
         return []
     random.shuffle(items)
-    rotated_items = collections.deque(items)
-    rotated_items.rotate(1)
+    next(rotated_items := itertools.cycle(items))
     return list(zip(items, rotated_items))
 
 
