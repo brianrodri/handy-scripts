@@ -15,7 +15,7 @@ def MakeRandomPairs(items):
 
         (s[0], s[1]), (s[1], s[2]), (s[2], s[3]), ..., (s[N - 1], s[N])
 
-    Where s is a shuffled copy of the input items.
+    Where `s` is a shuffled copy of the input items.
 
     Args:
         items: Iterable.
@@ -59,4 +59,4 @@ if '--send' in sys.argv[1:]:
     print('Sent!')
 else:
     for santa, santee in player_pairs:
-        print(f'{santa.name} -> {santee.name}')
+        print(f'{santa!r} -> {santee!r}')
