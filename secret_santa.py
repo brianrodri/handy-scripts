@@ -8,12 +8,6 @@ import smtplib
 import sys
 
 
-@dataclasses.dataclass
-class Player():
-    name: str
-    email: str
-
-
 def MakeRandomPairs(items):
     """Returns list of random item-pairs with exactly one cycle."""
     if not (items := list(items)):
@@ -22,6 +16,12 @@ def MakeRandomPairs(items):
     rotated_items = collections.deque(items)
     rotated_items.rotate(1)
     return list(zip(items, rotated_items))
+
+
+@dataclasses.dataclass
+class Player():
+    name: str
+    email: str
 
 
 player_pairs = MakeRandomPairs([
