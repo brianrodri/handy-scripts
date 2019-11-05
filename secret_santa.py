@@ -47,7 +47,7 @@ def main():
         print('Sent!')
     else:
         for santa, santee in player_pairs:
-            print(f'{santa!r} -> {santee!r}')
+            print(f'{santa.name} -> {santee.name}')
 
 
 if __name__ == '__main__':
