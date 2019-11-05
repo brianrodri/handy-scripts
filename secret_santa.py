@@ -34,8 +34,8 @@ def main():
 
     if '--send' in sys.argv[1:]:
         with smtplib.SMTP('smtp.gmail.com:587') as server:
-            server.starttls()  # GMail requires TLS encryption.
-            sender_gmail_address = input('GMail address: ')
+            server.starttls()  # Gmail requires TLS encryption.
+            sender_gmail_address = input('Gmail address: ')
             server.login(sender_gmail_address, getpass.getpass())
             for santa, santee in player_pairs:
                 message = email.message.EmailMessage()
